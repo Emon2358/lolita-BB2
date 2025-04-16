@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "Fetching URL: ${{ github.event.inputs.url }}"
           echo "Delay: ${{ github.event.inputs.delay }}ms"
-          deno run --allow-net --allow-write --allow-env --allow-read fetch_site.ts "${{ github.event.inputs.url }}" "${{ github.event.inputs.delay }}"
+          deno run --allow-net --allow-write --allow-env --allow-read --allow-run fetch_site.ts "${{ github.event.inputs.url }}" "${{ github.event.inputs.delay }}"
 
       - name: Commit and Push generated HTML
         run: |
