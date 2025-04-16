@@ -1,0 +1,50 @@
+name: Fetch Site Content and Upload HTML
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "取得対象のサイト URL を入力してください"
+        required: true
+        default: "https://example.com"
+      delay:
+        description: "追加待機時間（ミリ秒）: 動的コンテンツのレンダリングに必要な待機時間（例: 1000）"
+        required: false
+        default: "1000"
+  push:
+    branches: [ main ]
+
+jobs:
+  fetch-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true  # コミット & プッシュ用のトークンを保持
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Run fetch site script
+        run: |
+          echo "Fetching URL: ${{ github.event.inputs.url }}"
+          echo "Delay: ${{ github.event.inputs.delay }}ms"
+          deno run --allow-net --allow-write fetch_site.ts "${{ github.event.inputs.url }}" "${{ github.event.inputs.delay }}"
+
+      - name: Commit and Push generated HTML
+        run: |
+          # Git のユーザー設定（GitHub Actions 用）
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          # 変更された HTML ファイル全体を追加
+          git add *.html
+          # 変更がある場合のみコミット＆プッシュ
+          if ! git diff --cached --quiet; then
+            git commit -m "Update generated HTML for ${{ github.event.inputs.url }}"
+            git push
+          else
+            echo "No changes detected, nothing to commit."
+          fi
