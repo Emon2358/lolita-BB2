@@ -8,7 +8,7 @@ on:
         required: true
         default: "https://example.com"
       delay:
-        description: "追加待機時間（ミリ秒）: 動的コンテンツのレンダリングに必要な待機時間（例: 1000）"
+        description: "追加待機時間（ミリ秒）: 動的コンテンツのレンダリング待機時間（例: 1000）"
         required: false
         default: "1000"
   push:
@@ -32,12 +32,14 @@ jobs:
         run: |
           echo "Fetching URL: ${{ github.event.inputs.url }}"
           echo "Delay: ${{ github.event.inputs.delay }}ms"
-          deno run --allow-net --allow-write --allow-env fetch_site.ts "${{ github.event.inputs.url }}" "${{ github.event.inputs.delay }}"
+          deno run --allow-net --allow-write --allow-env --allow-read fetch_site.ts "${{ github.event.inputs.url }}" "${{ github.event.inputs.delay }}"
 
       - name: Commit and Push generated HTML
         run: |
+          # Git のユーザー設定（GitHub Actions 用）
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          # 変更された HTML ファイル（すべての *.html）を追加
           git add *.html
           if ! git diff --cached --quiet; then
             git commit -m "Update generated HTML for ${{ github.event.inputs.url }}"
@@ -45,3 +47,4 @@ jobs:
           else
             echo "No changes detected, nothing to commit."
           fi
+
